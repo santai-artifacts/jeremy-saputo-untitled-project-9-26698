@@ -6,7 +6,7 @@
 <title>Flappy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   :root {
     --yellow: #ffcf33;
@@ -24,7 +24,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body {
-    font-family: 'Comic Sans MS', 'Comic Neue', 'Chalkboard SE', cursive;
+    font-family: 'Baloo 2', system-ui, sans-serif;
     background:
       radial-gradient(900px 500px at 50% -10%, var(--sky-top), transparent 60%),
       linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 100%);
@@ -334,7 +334,7 @@
   function drawScore() {
     if (state === 'ready') return;
     ctx.save();
-    ctx.font = "700 46px 'Comic Sans MS', 'Comic Neue', cursive";
+    ctx.font = "800 46px 'Baloo 2', sans-serif";
     ctx.textAlign = 'center';
     ctx.lineWidth = 5;
     ctx.strokeStyle = 'rgba(120,80,6,.6)';
