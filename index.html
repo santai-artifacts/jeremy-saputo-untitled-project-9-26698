@@ -6,7 +6,7 @@
 <title>Flappy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
 <style>
   :root {
     --yellow: #ffcf33;
@@ -24,7 +24,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body {
-    font-family: 'Fredoka', system-ui, sans-serif;
+    font-family: 'Comic Sans MS', 'Comic Neue', 'Chalkboard SE', cursive;
     background:
       radial-gradient(900px 500px at 50% -10%, var(--sky-top), transparent 60%),
       linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 100%);
@@ -95,7 +95,7 @@
   <div class="app">
     <header>
       <div class="title">
-        <div class="logo" aria-hidden="true">🐤</div>
+        <div class="logo" aria-hidden="true">F</div>
         <div>
           <h1>Flappy</h1>
           <div class="subtitle">Tap to flap. Mind the pipes.</div>
@@ -182,7 +182,7 @@
     if (score > best) { best = score; bestEl.textContent = best; }
     ovTitle.textContent = 'Game Over';
     ovText.innerHTML = `You scored <span class="big">${score}</span> point${score === 1 ? '' : 's'}.` +
-      (score === best && score > 0 ? ' New best! 🎉' : '');
+      (score === best && score > 0 ? ' New best!' : '');
     startBtn.textContent = 'Play Again';
     overlay.classList.remove('hidden');
   }
@@ -334,7 +334,7 @@
   function drawScore() {
     if (state === 'ready') return;
     ctx.save();
-    ctx.font = '700 46px Fredoka, sans-serif';
+    ctx.font = "700 46px 'Comic Sans MS', 'Comic Neue', cursive";
     ctx.textAlign = 'center';
     ctx.lineWidth = 5;
     ctx.strokeStyle = 'rgba(120,80,6,.6)';
