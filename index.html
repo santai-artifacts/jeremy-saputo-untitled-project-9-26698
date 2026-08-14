@@ -137,32 +137,45 @@
   const GRAVITY = 0.45;
   const FLAP = -7.6;
   const PIPE_W = 62;
-  const GAP = 158;          // vertical gap between pipes
-  const PIPE_SPACING = 220; // horizontal distance between pipe pairs
-  const SPEED = 2.4;
   const GROUND_H = 54;
   const BIRD_X = 96;
   const R = 15;             // bird radius
 
+  // Levels: each unlocks at a score threshold and ramps difficulty +
+  // shifts the sky/pipe palette so the change is visible.
+  const LEVELS = [
+    { at: 0,  name: 'Sunrise', gap: 168, speed: 2.3, spacing: 230, sky: ['#fff3c4', '#ffd54a'], pipe: ['#f3bb2e', '#e6a91f', '#c9890f'] },
+    { at: 8,  name: 'Midday',  gap: 152, speed: 2.7, spacing: 215, sky: ['#fff0a8', '#ffc21e'], pipe: ['#8fd66b', '#5cb63c', '#3f8a26'] },
+    { at: 18, name: 'Sunset',  gap: 138, speed: 3.1, spacing: 200, sky: ['#ffd39b', '#ff8f4d'], pipe: ['#ff9a5c', '#f26d2b', '#c94e13'] },
+    { at: 30, name: 'Night',   gap: 126, speed: 3.6, spacing: 188, sky: ['#4a4e8a', '#232752'], pipe: ['#7d7bd6', '#5754b0', '#3a3880'] },
+  ];
+
   let bird, pipes, score, best = 0, frame;
   let state = 'ready';      // ready | playing | dead
   let flapAnim = 0;
+  let level = 0;            // index into LEVELS
+  let cur = LEVELS[0];      // active level's params
+  let bannerT = 0;          // frames remaining on the level-up banner
 
   function reset() {
     bird = { y: H * 0.42, v: 0 };
     pipes = [];
     score = 0;
     frame = 0;
+    level = 0;
+    cur = LEVELS[0];
+    bannerT = 0;
+    levelEl.textContent = '1';
     // seed initial pipes off-screen to the right
-    for (let i = 0; i < 3; i++) addPipe(W + 40 + i * PIPE_SPACING);
+    for (let i = 0; i < 3; i++) addPipe(W + 40 + i * cur.spacing);
   }
 
   function addPipe(x) {
     const margin = 60;
     const minTop = margin;
-    const maxTop = H - GROUND_H - GAP - margin;
+    const maxTop = H - GROUND_H - cur.gap - margin;
     const top = minTop + Math.random() * (maxTop - minTop);
-    pipes.push({ x, top, passed: false });
+    pipes.push({ x, top, gap: cur.gap, passed: false });
   }
 
   function start() {
@@ -195,19 +208,22 @@
     bird.v += GRAVITY;
     bird.y += bird.v;
 
+    if (bannerT > 0) bannerT--;
+
     // Move pipes, recycle, score
     for (const p of pipes) {
-      p.x -= SPEED;
+      p.x -= cur.speed;
       if (!p.passed && p.x + PIPE_W < BIRD_X - R) {
         p.passed = true;
         score++;
+        checkLevelUp();
       }
     }
     // Recycle off-screen pipes to the right
     if (pipes.length && pipes[0].x + PIPE_W < 0) {
       pipes.shift();
       const lastX = pipes[pipes.length - 1].x;
-      addPipe(lastX + PIPE_SPACING);
+      addPipe(lastX + cur.spacing);
     }
 
     // Collisions
@@ -218,18 +234,29 @@
     for (const p of pipes) {
       const inX = BIRD_X + R > p.x && BIRD_X - R < p.x + PIPE_W;
       if (inX) {
-        const gapTop = p.top, gapBot = p.top + GAP;
+        const gapTop = p.top, gapBot = p.top + p.gap;
         if (bird.y - R < gapTop || bird.y + R > gapBot) { die(); return; }
       }
     }
   }
 
+  function checkLevelUp() {
+    // Advance if the score reaches the next level's threshold
+    const next = LEVELS[level + 1];
+    if (next && score >= next.at) {
+      level++;
+      cur = LEVELS[level];
+      bannerT = 110;
+      levelEl.textContent = String(level + 1);
+    }
+  }
+
   // ---- Drawing ----
   function drawBackground() {
-    // sky already via canvas bg fill
+    // sky reflects the current level's palette
     const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, '#fff3c4');
-    g.addColorStop(1, '#ffd54a');
+    g.addColorStop(0, cur.sky[0]);
+    g.addColorStop(1, cur.sky[1]);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
 
@@ -248,11 +275,11 @@
 
   function drawPipes() {
     for (const p of pipes) {
-      const gapBot = p.top + GAP;
+      const gapBot = p.top + p.gap;
       const grd = ctx.createLinearGradient(p.x, 0, p.x + PIPE_W, 0);
-      grd.addColorStop(0, '#f3bb2e');
-      grd.addColorStop(0.5, '#e6a91f');
-      grd.addColorStop(1, '#c9890f');
+      grd.addColorStop(0, cur.pipe[0]);
+      grd.addColorStop(0.5, cur.pipe[1]);
+      grd.addColorStop(1, cur.pipe[2]);
       ctx.fillStyle = grd;
       ctx.strokeStyle = 'rgba(120,80,6,.55)';
       ctx.lineWidth = 2.5;
@@ -344,12 +371,36 @@
     ctx.restore();
   }
 
+  function drawBanner() {
+    if (bannerT <= 0) return;
+    // fade in/out over the banner's lifetime
+    const life = bannerT / 110;
+    const alpha = Math.min(1, life * 3, (1 - life) * 3 + 0.15);
+    const y = 150 - (1 - Math.min(1, life * 3)) * 20;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, alpha);
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = 'rgba(120,80,6,.55)';
+
+    ctx.font = "800 20px 'Baloo 2', sans-serif";
+    ctx.fillStyle = '#fff';
+    ctx.strokeText(`LEVEL ${level + 1}`, W / 2, y);
+    ctx.fillText(`LEVEL ${level + 1}`, W / 2, y);
+
+    ctx.font = "700 34px 'Baloo 2', sans-serif";
+    ctx.strokeText(cur.name, W / 2, y + 38);
+    ctx.fillText(cur.name, W / 2, y + 38);
+    ctx.restore();
+  }
+
   function render() {
     drawBackground();
     drawPipes();
     drawGround();
     drawBird();
     drawScore();
+    drawBanner();
   }
 
   function loop() {
